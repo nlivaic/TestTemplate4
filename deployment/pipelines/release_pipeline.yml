@@ -68,7 +68,7 @@ jobs:
 
         - task: AzureCLI@2
           inputs:
-            azureSubscription: $(azureServiceConnection)
+            azureSubscription: 'AzureConnection_TestTemplate2'
             scriptType: bash
             scriptLocation: inlineScript
             useGlobalConfig: false

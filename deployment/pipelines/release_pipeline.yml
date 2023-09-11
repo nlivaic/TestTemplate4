@@ -24,6 +24,8 @@ jobs:
     runOnce:
       deploy:
         steps:
+        - script: pwd
+          displayName: 'Basic Information - pwd'
         - script: ls -al
           displayName: 'Basic Information - Directory Contents'
 

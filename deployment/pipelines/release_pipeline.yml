@@ -69,7 +69,7 @@ jobs:
         - task: AzureWebApp@1
           displayName: 'Deploy TestTemplate4.Api to App Service'
           inputs:
-            azureSubscription: 'AzureConnection_TestTemplate4'
+            azureSubscription: 'AzureConnection_TestTemplate2'
             appType: 'webAppLinux'
             appName: '$(APP_SERVICE_WEB_NAME)'
             resourceGroupName: '$(RG)'

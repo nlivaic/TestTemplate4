@@ -24,6 +24,9 @@ jobs:
     runOnce:
       deploy:
         steps:
+        - script: ls -al
+          displayName: 'Basic Information - Directory Contents'
+
         - task: PowerShell@2
           displayName: 'Create version number'
           name: 'CreateVersionNumber'

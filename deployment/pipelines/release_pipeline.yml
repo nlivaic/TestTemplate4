@@ -1,0 +1,77 @@
+trigger: none
+pr: none
+
+# Pipeline resource defined as per https://bit.ly/3PhwhRk
+resources:
+  pipelines:
+  - pipeline: build_pipeline        # Used to reference the pipeline reference from other parts of the code.
+    source: build_pipeline  	# This must match  the build pipeline name in ADO.
+                                    # By default, pipelines are named after the ADO build pipeline name.
+    trigger:
+      branches:
+      - master                      # Will get triggered whenever the source pipeline runs on master branch.
+
+jobs:
+- deployment: testtemplate4_deploy_to_appservice
+  displayName: TestTemplate4 Deploy to AppService
+  environment: production
+  pool:
+    vmImage: 'ubuntu-latest'
+  strategy:
+    runOnce:
+      deploy:
+        steps:
+        - task: PowerShell@2
+          displayName: 'Create version number'
+          name: 'CreateVersionNumber'
+          inputs:
+            targetType: 'inline'
+            script: |
+              $newVersion = "$(resources.pipeline.build_pipeline.runName)"
+              [string] $buildName = "$($newVersion)"
+              Write-Host "##vso[build.updatebuildnumber]$buildName"
+
+        - download: none
+
+        - task: DownloadPipelineArtifact@2
+          displayName: 'Download Artifact TestTemplate4.Api'
+          inputs:
+            buildType: 'specific'
+            definition: build_pipeline
+            buildVersionToDownload: 'latest'
+            artifactName: 'drop.TestTemplate4.Api'
+            project: 'TestTemplate4_ADO_Project'
+            downloadPath: '$(Pipeline.Workspace)/drop/TestTemplate4.Api'
+
+        - task: DownloadPipelineArtifact@2
+          displayName: 'Download Artifact TestTemplate4.WorkerServices'
+          inputs:
+            buildType: 'specific'
+            definition: build_pipeline
+            buildVersionToDownload: 'latest'
+            artifactName: 'drop.TestTemplate4.WorkerServices'
+            project: 'TestTemplate4_ADO_Project'
+            downloadPath: '$(Pipeline.Workspace)/drop/TestTemplate4.WorkerServices'
+
+        - task: DownloadPipelineArtifact@2
+          displayName: 'Download Artifact TestTemplate4.Migrations'
+          inputs:
+            buildType: 'specific'
+            definition: build_pipeline
+            buildVersionToDownload: 'latest'
+            artifactName: 'drop.TestTemplate4.Migrations'
+            project: 'TestTemplate4_ADO_Project'
+            downloadPath: '$(Pipeline.Workspace)/drop/TestTemplate4.Migrations'
+
+        - script: dotnet $(Pipeline.Workspace)/drop/TestTemplate4.Migrations/TestTemplate4.Migrations.dll "$(ConnectionStrings__TestTemplate4Db_Migrations_Connection)" "$(DB_USER)" "$(DB_PASSWORD)" "$(Pipeline.Workspace)/drop/TestTemplate4.Migrations"
+          displayName: 'Migrate database'
+
+        - task: AzureWebApp@1
+          displayName: 'Deploy TestTemplate4.Api to App Service'
+          inputs:
+            azureSubscription: 'AzureConnection_TestTemplate4'
+            appType: 'webAppLinux'
+            appName: '$(APP_SERVICE_WEB_NAME)'
+            resourceGroupName: '$(RG)'
+            package: '$(Pipeline.Workspace)/drop/TestTemplate4.Api/**/*.zip'
+            runtimeStack: 'DOTNETCORE|6.0'

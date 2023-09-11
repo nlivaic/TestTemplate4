@@ -24,8 +24,12 @@ jobs:
     runOnce:
       deploy:
         steps:
+        - checkout: self
+          fetchDepth: 0
+
         - script: pwd
           displayName: 'Basic Information - pwd'
+
         - script: ls -al
           displayName: 'Basic Information - Directory Contents'
 

@@ -83,8 +83,8 @@ jobs:
             scriptLocation: inlineScript
             useGlobalConfig: false
             inlineScript: |
-              az deployment sub create --location $LOCATION --template-file ./deployment/resource-group.bicep --parameters environment=$ENVIRONMENT projectName=$PROJECT_NAME location=$LOCATION
-              az deployment group create --resource-group $RG --template-file ./deployment/iac.bicep --parameters environment=$ENVIRONMENT projectName=$PROJECT_NAME db_user=$DB_USER db_password=$DB_PASSWORD
+              az deployment sub create --location $(LOCATION) --template-file ./deployment/resource-group.bicep --parameters environment=$(ENVIRONMENT) projectName=$(PROJECT_NAME) location=$(LOCATION)
+              az deployment group create --resource-group $(RG) --template-file ./deployment/iac.bicep --parameters environment=$(ENVIRONMENT) projectName=$(PROJECT_NAME) db_user=$(DB_USER) db_password=$(DB_PASSWORD)
               
               # $jsonResultRg = az deployment sub create --location $LOCATION --template-file ./deployment/resource-group.bicep --parameters environment=$ENVIRONMENT projectName=$PROJECT_NAME location=$LOCATION | ConvertFrom-Json
               # $resourceGroupName = $jsonResult.properties.outputs.resourceGroupName.value

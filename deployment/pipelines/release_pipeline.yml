@@ -76,14 +76,23 @@ jobs:
             downloadPath: '$(Pipeline.Workspace)/drop/TestTemplate4.Migrations'
 
         - task: AzureCLI@2
+          displayName: 'Deploy Bicep'
           inputs:
             azureSubscription: 'AzureConnection_TestTemplate2'
-            scriptType: bash
+            scriptType: pscore
             scriptLocation: inlineScript
             useGlobalConfig: false
             inlineScript: |
-              az deployment sub create --location $LOCATION --template-file ./deployment/resource-group.bicep --parameters environment=$ENVIRONMENT projectName=$PROJECT_NAME location=$LOCATION
-              az deployment group create --resource-group $RG --template-file ./deployment/iac.bicep --parameters environment=$ENVIRONMENT projectName=$PROJECT_NAME db_user=$DB_USER db_password=$DB_PASSWORD
+              $jsonResultRg = az deployment sub create --location $LOCATION --template-file ./deployment/resource-group.bicep --parameters environment=$ENVIRONMENT projectName=$PROJECT_NAME location=$LOCATION | ConvertFrom-Json
+              $resourceGroupName = $jsonResult.properties.outputs.resourceGroupName.value
+              Write-Host "##vso[task.setvariable variable=RG;isoutput=true]$resourceGroupName"
+
+              $jsonResultAll = az deployment group create --resource-group $RG --template-file ./deployment/iac.bicep --parameters environment=$ENVIRONMENT projectName=$PROJECT_NAME db_user=$DB_USER db_password=$DB_PASSWORD | ConvertFrom-Json
+              
+              $appServiceWebName = $jsonResultAll.properties.outputs.appServiceWebName.value
+              Write-Host "##vso[task.setvariable variable=APP_SERVICE_WEB_NAME;isoutput=true]$appServiceWebName"
+              $dbConnection = $jsonResultAll.properties.outputs.dbConnection.value
+              Write-Host "##vso[task.setvariable variable=ConnectionStrings__TestTemplate4Db_Migrations_Connection;isoutput=true]$dbConnection"
 
         - script: dotnet $(Pipeline.Workspace)/drop/TestTemplate4.Migrations/TestTemplate4.Migrations.dll "$(ConnectionStrings__TestTemplate4Db_Migrations_Connection)" "$(DB_USER)" "$(DB_PASSWORD)" "$(Pipeline.Workspace)/drop/TestTemplate4.Migrations"
           displayName: 'Migrate database'

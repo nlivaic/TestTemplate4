@@ -91,9 +91,9 @@ jobs:
               $appServiceWebName = $jsonResultAll.properties.outputs.appServiceWebName.value
               Write-Host "##vso[task.setvariable variable=appServiceWebName;isoutput=true]$appServiceWebName"
               $dbConnection = $jsonResultAll.properties.outputs.dbConnection.value
-              Write-Host "##vso[task.setvariable variable=ConnectionStrings__TestTemplate4Db_Migrations_Connection;isoutput=true]$dbConnection"
+              Write-Host "##vso[task.setvariable variable=dbConnection;isoutput=true]$dbConnection"
 
-        - script: dotnet $(Pipeline.Workspace)/drop/TestTemplate4.Migrations/TestTemplate4.Migrations.dll "$(ConnectionStrings__TestTemplate4Db_Migrations_Connection)" "$(DB_USER)" "$(DB_PASSWORD)" "$(Pipeline.Workspace)/drop/TestTemplate4.Migrations"
+        - script: dotnet $(Pipeline.Workspace)/drop/TestTemplate4.Migrations/TestTemplate4.Migrations.dll "$(bicepOutput.dbConnection)" "$(DB_USER)" "$(DB_PASSWORD)" "$(Pipeline.Workspace)/drop/TestTemplate4.Migrations"
           displayName: 'Migrate database'
 
         - task: AzureWebApp@1

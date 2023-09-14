@@ -84,7 +84,7 @@ jobs:
             useGlobalConfig: false
             inlineScript: |
               $jsonResultRg = az deployment sub create --location $(LOCATION) --template-file ./deployment/resource-group.bicep --parameters environment=$(ENVIRONMENT) projectName=$(PROJECT_NAME) location=$(LOCATION) | ConvertFrom-Json
-              $resourceGroupName = $jsonResult.properties.outputs.resourceGroupName.value
+              $resourceGroupName = $jsonResultRg.properties.outputs.resourceGroupName.value
               Write-Host "##vso[task.setvariable variable=RG;isoutput=true]$resourceGroupName"
               $jsonResultAll = az deployment group create --resource-group $resourceGroupName --template-file ./deployment/iac.bicep --parameters environment=$(ENVIRONMENT) projectName=$(PROJECT_NAME) db_user=$(DB_USER) db_password=$(DB_PASSWORD) | ConvertFrom-Json
               $appServiceWebName = $jsonResultAll.properties.outputs.appServiceWebName.value

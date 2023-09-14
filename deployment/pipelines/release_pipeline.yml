@@ -77,6 +77,7 @@ jobs:
 
         - task: AzureCLI@2
           displayName: 'Deploy Bicep'
+          name: 'bicepOutput'
           inputs:
             azureSubscription: 'AzureConnection_TestTemplate2'
             scriptType: pscore
@@ -85,12 +86,13 @@ jobs:
             inlineScript: |
               $jsonResultRg = az deployment sub create --location $(LOCATION) --template-file ./deployment/resource-group.bicep --parameters environment=$(ENVIRONMENT) projectName=$(PROJECT_NAME) location=$(LOCATION) | ConvertFrom-Json
               $resourceGroupName = $jsonResultRg.properties.outputs.resourceGroupName.value
-              Write-Host "##vso[task.setvariable variable=RG;isoutput=true]$resourceGroupName"
+              Write-Host "##vso[task.setvariable variable=resourceGroupName;isoutput=true]$resourceGroupName"
               $jsonResultAll = az deployment group create --resource-group $resourceGroupName --template-file ./deployment/iac.bicep --parameters environment=$(ENVIRONMENT) projectName=$(PROJECT_NAME) db_user=$(DB_USER) db_password=$(DB_PASSWORD) | ConvertFrom-Json
               $appServiceWebName = $jsonResultAll.properties.outputs.appServiceWebName.value
-              Write-Host "##vso[task.setvariable variable=APP_SERVICE_WEB_NAME;isoutput=true]$appServiceWebName"
+              Write-Host "##vso[task.setvariable variable=appServiceWebName;isoutput=true]$appServiceWebName"
               $dbConnection = $jsonResultAll.properties.outputs.dbConnection.value
               Write-Host "##vso[task.setvariable variable=ConnectionStrings__TestTemplate4Db_Migrations_Connection;isoutput=true]$dbConnection"
+
         - script: dotnet $(Pipeline.Workspace)/drop/TestTemplate4.Migrations/TestTemplate4.Migrations.dll "$(ConnectionStrings__TestTemplate4Db_Migrations_Connection)" "$(DB_USER)" "$(DB_PASSWORD)" "$(Pipeline.Workspace)/drop/TestTemplate4.Migrations"
           displayName: 'Migrate database'
 
@@ -99,7 +101,7 @@ jobs:
           inputs:
             azureSubscription: 'AzureConnection_TestTemplate2'
             appType: 'webAppLinux'
-            appName: '$(APP_SERVICE_WEB_NAME)'
-            resourceGroupName: '$(RG)'
+            appName: '$(bicepOutput.appServiceWebName)'
+            resourceGroupName: '$(bicepOutput.resourceGroupName)'
             package: '$(Pipeline.Workspace)/drop/TestTemplate4.Api/**/*.zip'
             runtimeStack: 'DOTNETCORE|6.0'
